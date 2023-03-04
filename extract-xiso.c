@@ -241,6 +241,9 @@
 	#define _GNU_SOURCE
 #endif
 
+#if defined(_MSC_VER)
+	#pragma warning(disable : 4996)	// Unsafe and deprecated POSIX functions warning
+#endif
 
 #include <time.h>
 #include <errno.h>
