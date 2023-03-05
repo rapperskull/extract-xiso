@@ -271,6 +271,8 @@
 #endif
 
 #if defined(_MSC_VER)
+	#include <BaseTsd.h>
+	typedef SSIZE_T		ssize_t;
 	#define strcasecmp	_stricmp
 	#define strncasecmp	_strnicmp
 #else
