@@ -987,7 +987,7 @@ int create_xiso( char *in_root_directory, char *in_output_directory, dir_node_av
 
 		if ( in_root ) {
 			root.subdirectory = in_root;
-			avl_traverse_depth_first( in_root, (traversal_callback) calculate_total_files_and_bytes, nil, k_prefix, 0 );
+			avl_traverse_depth_first( &root, (traversal_callback) calculate_total_files_and_bytes, nil, k_prefix, 0 );
 		} else {
 			int		i, n = 0;
 
