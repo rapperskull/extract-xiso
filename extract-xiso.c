@@ -1343,10 +1343,13 @@ int process_node(int in_xiso, dir_node* node, char* in_path, modes in_mode, dir_
 
 		if (!err) {
 			// Recurse on subdirectory
-			if (!err && node->file_size > 0) {
-				if (in_path) if (asprintf(&path, "%s%s%c", in_path, node->filename, PATH_CHAR) == -1) mem_err();
-				end_offset = n_sectors(node->file_size) * XISO_SECTOR_SIZE / XISO_DWORD_SIZE;
-				err = traverse_xiso(in_xiso, dir_start, 0, end_offset, path, in_mode, in_root, strategy);
+			if (node->file_size == 0) *in_root = EMPTY_SUBDIRECTORY;
+			else {
+				if (in_path && asprintf(&path, "%s%s%c", in_path, node->filename, PATH_CHAR) == -1) mem_err();
+				if (!err) {
+					end_offset = n_sectors(node->file_size) * XISO_SECTOR_SIZE / XISO_DWORD_SIZE;
+					err = traverse_xiso(in_xiso, dir_start, 0, end_offset, path, in_mode, in_root, strategy);
+				}
 				if (path) free(path);
 			}
 
