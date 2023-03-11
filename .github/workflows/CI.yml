@@ -138,7 +138,7 @@ jobs:
       with:
         usesh: true
         prepare: |
-          pkg install -y cmake
+          pkg_add cmake
         run: |
           echo "CMake generate"
           mkdir build && cd build
