@@ -107,23 +107,19 @@ jobs:
     needs: Init
     steps:
     - uses: actions/checkout@v3
-    - name: CMake generate
+    - name: Run build in FreeBSD VM
       uses: vmactions/freebsd-vm@v0
       with:
         prepare: |
           pkg install -y cmake
         run: |
+          echo "CMake generate"
           mkdir build && cd build
           cmake ..
-    - name: Build
-      uses: vmactions/freebsd-vm@v0
-      with:
-        working-directory: build
-        run: cmake --build . -j $(sysctl -n hw.ncpu)
-    - name: Prepare artifacts
-      uses: vmactions/freebsd-vm@v0
-      with:
-        run: |
+          echo "Build"
+          cmake --build . -j $(sysctl -n hw.ncpu)
+          echo "Prepare artifacts"
+          cd ..
           mkdir artifacts
           mv -v build/extract-xiso LICENSE.TXT artifacts
     - uses: actions/upload-artifact@v2
