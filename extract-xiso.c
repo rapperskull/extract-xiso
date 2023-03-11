@@ -271,7 +271,7 @@
 #include <sys/types.h>
 
 #if defined( __FREEBSD__ ) || defined( __OPENBSD__ )
-	#include <machine/limits.h>
+	#include <sys/limits.h>
 #endif
 
 #if defined( _WIN32 )
@@ -317,6 +317,18 @@
 	#define READWRITEFLAGS				O_RDWR
 
 	typedef	off_t						xoff_t;
+#elif defined( __OPENBSD__ )
+	#define exiso_target				"openbsd"
+
+	#define PATH_CHAR					'/'
+	#define PATH_CHAR_STR				"/"
+
+	#define FORCE_ASCII					1
+	#define READFLAGS					O_RDONLY
+	#define WRITEFLAGS					O_WRONLY | O_CREAT | O_TRUNC
+	#define READWRITEFLAGS				O_RDWR
+
+	typedef	off_t						xoff_t;
 #elif defined( __LINUX__ )
 	#define exiso_target				"linux"
 
@@ -332,8 +344,6 @@
 	#define stat						stat64
 	
 	typedef off64_t 					xoff_t;
-#elif defined( __OPENBSD__ )
-	#define exiso_target				"openbsd"
 #elif defined( _WIN32 )
 	#define exiso_target				"win32"
 
@@ -362,17 +372,17 @@
 #endif
 
 
-#define swap16( n )						( ( n ) = ( n ) << 8 | ( n ) >> 8 )
-#define swap32( n )						( ( n ) = ( n ) << 24 | ( ( ( n ) << 8 ) & 0xff0000 ) | ( ( ( n ) >> 8 ) & 0xff00 ) | ( n ) >> 24 )
+#define inplace_swap16( n )				( (n) = ( ( ( (n) & 0xff ) << 8 ) | ( ( (n) & 0xff00 ) >> 8 ) ) )
+#define inplace_swap32( n )				( (n) = ( ( ( (n) & 0xff ) << 24) | ( ( (n) & 0xff00 ) << 8) | ( ( (n) & 0xff0000 ) >> 8 ) | ( ( (n) & 0xff000000 ) >> 24 ) ) )
 
 #ifdef USE_BIG_ENDIAN
 	#define big16( n )
 	#define big32( n )
-	#define little16( n )				swap16( n )
-	#define little32( n )				swap32( n )
+	#define little16( n )				inplace_swap16( n )
+	#define little32( n )				inplace_swap32( n )
 #else
-	#define big16( n )					swap16( n )
-	#define big32( n )					swap32( n )
+	#define big16( n )					inplace_swap16( n )
+	#define big32( n )					inplace_swap32( n )
 	#define	little16( n )
 	#define little32( n )
 #endif
