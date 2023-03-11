@@ -110,6 +110,8 @@ jobs:
     - name: CMake generate
       uses: vmactions/freebsd-vm@v0
       with:
+        prepare: |
+          pkg install -y cmake
         run: |
           mkdir build && cd build
           cmake ..
