@@ -110,6 +110,7 @@ jobs:
     - name: Run build in FreeBSD VM
       uses: vmactions/freebsd-vm@v0
       with:
+        usesh: true
         prepare: |
           pkg install -y cmake
         run: |
