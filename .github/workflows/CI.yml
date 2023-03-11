@@ -101,6 +101,33 @@ jobs:
       with:
         name: extract-xiso_${{ runner.os }}
         path: artifacts
+  
+  build-freebsd:
+    runs-on: macos-12
+    needs: Init
+    steps:
+    - uses: actions/checkout@v3
+    - name: CMake generate
+      uses: vmactions/freebsd-vm@v0
+      with:
+        run: |
+          mkdir build && cd build
+          cmake ..
+    - name: Build
+      uses: vmactions/freebsd-vm@v0
+      with:
+        working-directory: build
+        run: cmake --build . -j $(sysctl -n hw.ncpu)
+    - name: Prepare artifacts
+      uses: vmactions/freebsd-vm@v0
+      with:
+        run: |
+          mkdir artifacts
+          mv -v build/extract-xiso LICENSE.TXT artifacts
+    - uses: actions/upload-artifact@v2
+      with:
+        name: extract-xiso_freebsd
+        path: artifacts
 
   Release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
