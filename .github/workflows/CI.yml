@@ -20,7 +20,7 @@ jobs:
         echo "BUILD_TAG=$BUILD_TAG" >> $GITHUB_ENV
         echo -n $BUILD_TAG > tag
     - name: Upload artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: tag
         path: tag
@@ -43,7 +43,7 @@ jobs:
             platform: x64
             artifact_os: Win64
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: CMake generate
       run: |
         mkdir build && cd build
@@ -55,7 +55,7 @@ jobs:
       run: |
         mkdir artifacts
         mv -vb build\${{ matrix.configuration }}\extract-xiso.exe, LICENSE.TXT artifacts
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: extract-xiso_${{ matrix.artifact_os }}_${{ matrix.configuration }}
         path: artifacts
@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: Init
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: CMake generate
       run: |
         mkdir build && cd build
