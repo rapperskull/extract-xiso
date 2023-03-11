@@ -317,6 +317,18 @@
 	#define READWRITEFLAGS				O_RDWR
 
 	typedef	off_t						xoff_t;
+#elif defined( __OPENBSD__ )
+	#define exiso_target				"openbsd"
+
+	#define PATH_CHAR					'/'
+	#define PATH_CHAR_STR				"/"
+
+	#define FORCE_ASCII					1
+	#define READFLAGS					O_RDONLY
+	#define WRITEFLAGS					O_WRONLY | O_CREAT | O_TRUNC
+	#define READWRITEFLAGS				O_RDWR
+
+	typedef	off_t						xoff_t;
 #elif defined( __LINUX__ )
 	#define exiso_target				"linux"
 
@@ -332,8 +344,6 @@
 	#define stat						stat64
 	
 	typedef off64_t 					xoff_t;
-#elif defined( __OPENBSD__ )
-	#define exiso_target				"openbsd"
 #elif defined( _WIN32 )
 	#define exiso_target				"win32"
 
