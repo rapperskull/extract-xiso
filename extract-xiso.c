@@ -271,7 +271,7 @@
 #include <sys/types.h>
 
 #if defined( __FREEBSD__ ) || defined( __OPENBSD__ )
-	#include <machine/limits.h>
+	#include <sys/limits.h>
 #endif
 
 #if defined( _WIN32 )
