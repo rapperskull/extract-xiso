@@ -234,26 +234,22 @@
 	in
 */
 
-#ifndef DEBUG
-	#define DEBUG	0
-#endif
-
 #if defined( __LINUX__ )
 	#define _LARGEFILE64_SOURCE
 #endif
+
 #if defined( __GNUC__ )
 	#define _GNU_SOURCE
-#endif
-#if defined(_MSC_VER)
-	#pragma warning(disable: 4706)	// C4706: assignment within conditional expression
-#endif
-
-#if defined(__GNUC__)
 	#define unused	__attribute__((__unused__))
 #elif defined(_MSC_VER)
+	#pragma warning(disable: 4706)	// C4706: assignment within conditional expression
 	#define unused	__pragma(warning(suppress:4100))	/* This unfortunately disables the warning for the whole line and the next one */
 #else
 	#define unused
+#endif
+
+#ifndef DEBUG
+	#define DEBUG	0
 #endif
 
 #if DEBUG
