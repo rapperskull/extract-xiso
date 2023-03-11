@@ -127,11 +127,37 @@ jobs:
       with:
         name: extract-xiso_freebsd
         path: artifacts
+        
+  build-openbsd:
+    runs-on: macos-12
+    needs: Init
+    steps:
+    - uses: actions/checkout@v3
+    - name: Run build in OpenBSD VM
+      uses: vmactions/openbsd-vm@v0
+      with:
+        usesh: true
+        prepare: |
+          pkg install -y cmake
+        run: |
+          echo "CMake generate"
+          mkdir build && cd build
+          cmake ..
+          echo "Build"
+          cmake --build . -j $(sysctl -n hw.ncpu)
+          echo "Prepare artifacts"
+          cd ..
+          mkdir artifacts
+          mv -v build/extract-xiso LICENSE.TXT artifacts
+    - uses: actions/upload-artifact@v3
+      with:
+        name: extract-xiso_openbsd
+        path: artifacts
 
   Release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
-    needs: [build-windows, build-linux, build-macos, build-freebsd]
+    needs: [build-windows, build-linux, build-macos, build-freebsd, build-openbsd]
     env:
       BUILD_TAG:
     steps:
@@ -161,6 +187,9 @@ jobs:
         popd
         pushd dist/extract-xiso_freebsd
         zip -r ../extract-xiso-freebsd.zip *
+        popd
+        pushd dist/extract-xiso_openbsd
+        zip -r ../extract-xiso-openbsd.zip *
         popd
     - name: Get package info
       run: |
@@ -244,5 +273,15 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_name: extract-xiso-freebsd.zip
         asset_path: dist/extract-xiso-freebsd.zip
+        asset_content_type: application/zip
+    - name: Upload release assets (OpenBSD build)
+      id: upload-release-assets-openbsd-release
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_name: extract-xiso-openbsd.zip
+        asset_path: dist/extract-xiso-openbsd.zip
         asset_content_type: application/zip
 
