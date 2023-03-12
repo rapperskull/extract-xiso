@@ -1237,7 +1237,7 @@ int traverse_xiso(int in_xiso, xoff_t in_dir_start, uint16_t entry_offset, uint1
 		if (!err && read(in_xiso, &l_offset, XISO_TABLE_OFFSET_SIZE) != XISO_TABLE_OFFSET_SIZE) read_err();
 		if (!err && l_offset == XISO_PAD_SHORT) {
 			if (entry_offset == 0) {	// Empty directories have padding starting at the beginning
-				if (in_mode == k_generate_avl) err = (avl_insert(in_root, EMPTY_SUBDIRECTORY) == k_avl_error);
+				if (in_mode == k_generate_avl) *in_root = EMPTY_SUBDIRECTORY;
 				return err;				// Done
 			}
 			else if (strategy != discover_strategy) {			// When discovering, the padding means end of sector
