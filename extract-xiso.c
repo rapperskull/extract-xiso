@@ -944,14 +944,7 @@ int verify_xiso( int in_xiso, int32_t *out_root_dir_sector, int32_t *out_root_di
 	if ( ! err && memcmp( buffer, XISO_HEADER_DATA, XISO_HEADER_DATA_LENGTH ) ) misc_err( "%s appears to be corrupt", in_iso_name );
 
 	// seek to root directory sector
-	if ( ! err ) {
-		if ( ! *out_root_dir_size ) {
-			exiso_log( "\nxbox image %s contains no files.\n", in_iso_name );
-			err = err_iso_no_files;
-		} else {
-			if ( lseek( in_xiso, (xoff_t) *out_root_dir_sector * XISO_SECTOR_SIZE, SEEK_SET ) == -1 ) seek_err();
-		}
-	}
+	if (!err && lseek(in_xiso, (xoff_t)*out_root_dir_sector * XISO_SECTOR_SIZE, SEEK_SET) == -1) seek_err();
 	
 	return err;
 }
@@ -1179,7 +1172,7 @@ int decode_xiso( char *in_xiso, char *in_path, modes in_mode, char **out_iso_pat
 		}
 	}
 
-	if ( ! err && root_dir_size ) {						
+	if ( ! err ) {						
 		if ( in_path ) {
 			path_len = (int) strlen( in_path );
 			if ( in_path[ path_len - 1 ] != PATH_CHAR ) ++add_slash;
@@ -1194,9 +1187,12 @@ int decode_xiso( char *in_xiso, char *in_path, modes in_mode, char **out_iso_pat
 			if (!err && lseek(xiso, root_dir_start, SEEK_SET) == -1) seek_err();
 			
 			if ( in_mode == k_rewrite ) {
-				if (!err) err = traverse_xiso(xiso, root_dir_start, 0, root_end_offset, buf, k_generate_avl, &root, tree_strategy);
-				if (!err) err = traverse_xiso(xiso, root_dir_start, 0, root_end_offset, buf, k_generate_avl, &root, discover_strategy);
-				if (!err) err = create_xiso( iso_name, in_path, root, xiso, out_iso_path, nil, nil );
+				if (!err && root_dir_size == 0) root = EMPTY_SUBDIRECTORY;
+				else {
+					if (!err) err = traverse_xiso(xiso, root_dir_start, 0, root_end_offset, buf, k_generate_avl, &root, tree_strategy);
+					if (!err) err = traverse_xiso(xiso, root_dir_start, 0, root_end_offset, buf, k_generate_avl, &root, discover_strategy);
+				}
+				if (!err) err = create_xiso(iso_name, in_path, root, xiso, out_iso_path, nil, nil);
 			}
 			else {
 				if (!err) err = traverse_xiso(xiso, root_dir_start, 0, root_end_offset, buf, in_mode, nil, discover_strategy);
