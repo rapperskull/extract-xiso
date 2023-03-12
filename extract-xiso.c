@@ -2031,18 +2031,16 @@ int generate_avl_tree_local( dir_node_avl **out_root, int *io_n ) {
 
 FILE_TIME *alloc_filetime_now( void ) {
 	FILE_TIME		   *ft = nil;
-	double				tmp = 0.0f;
 	time_t				now = 0;
+	int64_t				converted;
 	int					err = 0;
 
 	if ( ( ft = (FILE_TIME *) malloc( sizeof(struct FILE_TIME) ) ) == nil ) mem_err();
 	if ( ! err && ( now = time( nil ) ) == -1 ) unknown_err();
 	if ( ! err ) {
-		tmp = ( (double) now + ( 369.0 * 365.25 * 24 * 60 * 60 - ( 3.0 * 24 * 60 * 60 + 6.0 * 60 * 60 ) ) ) * 1.0e7;
-
-		ft->h = (uint32_t) ( tmp * ( 1.0 / ( 4.0 * (double) ( 1 << 30 ) ) ) );
-		ft->l = (uint32_t) ( tmp - ( (double) ft->h ) * 4.0 * (double) ( 1 << 30 ) );
-		
+		converted = (now * 10000000LL) + 116444736000000000LL;	// Magic numbers directly from Microsoft
+		ft->h = (uint32_t)((converted >> 32) & 0xffffffff);
+		ft->l = (uint32_t)(converted & 0xffffffff);
 		little32( ft->h );		// convert to little endian here because this is a PC only struct and we won't read it anyway
 		little32( ft->l );
 	} else if ( ft ) {
