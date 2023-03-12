@@ -112,7 +112,7 @@ jobs:
     - name: FreeBSD toolchain setup
       run: |
         sudo apt install -y clang lld && cd /tmp && \
-        wget http://ftp.plusline.de/FreeBSD/releases/amd64/13.1-RELEASE/base.txz && \
+        wget -nv http://ftp.plusline.de/FreeBSD/releases/amd64/13.1-RELEASE/base.txz && \
         mkdir -p $SYSROOT_PATH && cd $SYSROOT_PATH && \
         tar -xf /tmp/base.txz ./lib/ ./usr/lib/ ./usr/include/ && \
         cd $SYSROOT_PATH/usr/lib && \
@@ -144,8 +144,8 @@ jobs:
     - name: OpenBSD toolchain setup
       run: |
         sudo apt install -y clang lld && cd /tmp && \
-        wget https://cdn.openbsd.org/pub/OpenBSD/7.2/amd64/base72.tgz && \
-        wget https://cdn.openbsd.org/pub/OpenBSD/7.2/amd64/comp72.tgz && \
+        wget -nv  https://cdn.openbsd.org/pub/OpenBSD/7.2/amd64/base72.tgz \
+        https://cdn.openbsd.org/pub/OpenBSD/7.2/amd64/comp72.tgz && \
         mkdir -p $SYSROOT_PATH && cd $SYSROOT_PATH && \
         tar -xf /tmp/base72.tgz ./usr/lib/ ./usr/include/ && \
         tar -xf /tmp/comp72.tgz ./usr/lib/ ./usr/include/ && \
