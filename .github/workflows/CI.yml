@@ -101,54 +101,67 @@ jobs:
       with:
         name: extract-xiso_${{ runner.os }}
         path: artifacts
-  
+
   build-freebsd:
-    runs-on: macos-12
+    runs-on: ubuntu-latest
     needs: Init
+    env:
+        SYSROOT_PATH: /opt/cross-freebsd-13
     steps:
     - uses: actions/checkout@v3
-    - name: Run build in FreeBSD VM
-      uses: vmactions/freebsd-vm@v0
-      with:
-        usesh: true
-        prepare: |
-          pkg install -y cmake
-        run: |
-          echo "CMake generate"
-          mkdir build && cd build
-          cmake ..
-          echo "Build"
-          cmake --build . -j $(sysctl -n hw.ncpu)
-          echo "Prepare artifacts"
-          cd ..
-          mkdir artifacts
-          mv -v build/extract-xiso LICENSE.TXT artifacts
+    - name: FreeBSD toolchain setup
+      run: |
+        apt install -y clang lld && cd /tmp && \
+        wget http://ftp.plusline.de/FreeBSD/releases/amd64/13.1-RELEASE/base.txz && \
+        mkdir -p $SYSROOT_PATH && cd $SYSROOT_PATH && \
+        tar -xf /tmp/base.txz ./lib/ ./usr/lib/ ./usr/include/ && \
+        cd $SYSROOT_PATH/usr/lib && \
+        find . -xtype l | xargs ls -l | grep ' /lib/' | awk -v sysroot="$SYSROOT_PATH" '{print "ln -sf " sysroot $11 " " $9}' | /bin/sh && \
+        rm -f /tmp/base.txz
+    - name: CMake generate
+      run: |
+        mkdir build && cd build
+        cmake -DCMAKE_TOOLCHAIN_FILE=../.github/data/FreeBSD.cmake ..
+    - name: Build
+      working-directory: build
+      run: cmake --build . -j $(nproc --all)
+    - name: Prepare artifacts
+      run: |
+        mkdir artifacts
+        mv -v build/extract-xiso LICENSE.TXT artifacts
     - uses: actions/upload-artifact@v3
       with:
         name: extract-xiso_freebsd
         path: artifacts
-        
+
   build-openbsd:
-    runs-on: macos-12
+    runs-on: ubuntu-latest
     needs: Init
+    env:
+        SYSROOT_PATH: /opt/cross-openbsd-7
     steps:
     - uses: actions/checkout@v3
-    - name: Run build in OpenBSD VM
-      uses: vmactions/openbsd-vm@v0
-      with:
-        usesh: true
-        prepare: |
-          pkg_add cmake
-        run: |
-          echo "CMake generate"
-          mkdir build && cd build
-          cmake ..
-          echo "Build"
-          cmake --build . -j $(sysctl -n hw.ncpu)
-          echo "Prepare artifacts"
-          cd ..
-          mkdir artifacts
-          mv -v build/extract-xiso LICENSE.TXT artifacts
+    - name: OpenBSD toolchain setup
+      run: |
+        apt install -y clang lld && cd /tmp && \
+        wget https://cdn.openbsd.org/pub/OpenBSD/7.2/amd64/base72.tgz && \
+        wget https://cdn.openbsd.org/pub/OpenBSD/7.2/amd64/comp72.tgz && \
+        mkdir -p $SYSROOT_PATH && cd $SYSROOT_PATH && \
+        tar -xf /tmp/base72.tgz ./usr/lib/ ./usr/include/ && \
+        tar -xf /tmp/comp72.tgz ./usr/lib/ ./usr/include/ && \
+        cd $SYSROOT_PATH/usr/lib && \
+        rm -f /tmp/base72.tgz /tmp/comp72.tgz
+    - name: CMake generate
+      run: |
+        mkdir build && cd build
+        cmake -DCMAKE_TOOLCHAIN_FILE=../.github/data/OpenBSD.cmake ..
+    - name: Build
+      working-directory: build
+      run: cmake --build . -j $(nproc --all)
+    - name: Prepare artifacts
+      run: |
+        mkdir artifacts
+        mv -v build/extract-xiso LICENSE.TXT artifacts
     - uses: actions/upload-artifact@v3
       with:
         name: extract-xiso_openbsd
@@ -284,4 +297,3 @@ jobs:
         asset_name: extract-xiso-openbsd.zip
         asset_path: dist/extract-xiso-openbsd.zip
         asset_content_type: application/zip
-
