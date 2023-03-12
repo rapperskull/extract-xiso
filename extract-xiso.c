@@ -945,7 +945,7 @@ int verify_xiso( int in_xiso, int32_t *out_root_dir_sector, int32_t *out_root_di
 
 	// seek to root directory sector
 	if ( ! err ) {
-		if ( ! *out_root_dir_sector && ! *out_root_dir_size ) {
+		if ( ! *out_root_dir_size ) {
 			exiso_log( "\nxbox image %s contains no files.\n", in_iso_name );
 			err = err_iso_no_files;
 		} else {
@@ -1179,7 +1179,7 @@ int decode_xiso( char *in_xiso, char *in_path, modes in_mode, char **out_iso_pat
 		}
 	}
 
-	if ( ! err && root_dir_sect && root_dir_size ) {						
+	if ( ! err && root_dir_size ) {						
 		if ( in_path ) {
 			path_len = (int) strlen( in_path );
 			if ( in_path[ path_len - 1 ] != PATH_CHAR ) ++add_slash;
