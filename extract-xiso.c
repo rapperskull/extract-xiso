@@ -270,7 +270,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#if defined( __FREEBSD__ ) || defined( __OPENBSD__ )
+#if defined( __FreeBSD__ ) || defined( __OpenBSD__ )
 	#include <sys/limits.h>
 #endif
 
@@ -305,7 +305,7 @@
 	#define READWRITEFLAGS				O_RDWR
 
 	typedef	off_t						xoff_t;
-#elif defined( __FREEBSD__ )
+#elif defined( __FreeBSD__ )
 	#define exiso_target				"freebsd"
 
 	#define PATH_CHAR					'/'
@@ -317,7 +317,7 @@
 	#define READWRITEFLAGS				O_RDWR
 
 	typedef	off_t						xoff_t;
-#elif defined( __OPENBSD__ )
+#elif defined( __OpenBSD__ )
 	#define exiso_target				"openbsd"
 
 	#define PATH_CHAR					'/'
