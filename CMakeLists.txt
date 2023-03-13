@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.20)
 project(extract-xiso)
 
 string(TOUPPER __${CMAKE_SYSTEM_NAME}__ TARGET_OS)
@@ -19,6 +19,7 @@ else()
 endif()
 add_executable(extract-xiso ${SOURCE_FILES})
 target_compile_definitions(extract-xiso PRIVATE ${TARGET_OS})
+target_compile_definitions(extract-xiso PRIVATE ENDIANNESS=${CMAKE_C_BYTE_ORDER})
 set_property(TARGET extract-xiso PROPERTY C_STANDARD 99)
 set_property(TARGET extract-xiso PROPERTY C_EXTENSIONS OFF)
 install(TARGETS extract-xiso RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")

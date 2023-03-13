@@ -305,6 +305,11 @@
 	#define READWRITEFLAGS				O_RDWR
 
 	typedef	off_t						xoff_t;
+
+	#include <libkern/OSByteOrder.h>
+	#define bswap_16(x)					OSSwapInt16(x)
+	#define bswap_32(x)					OSSwapInt32(x)
+	#define bswap_64(x)					OSSwapInt64(x)
 #elif defined( __FreeBSD__ )
 	#define exiso_target				"freebsd"
 
@@ -317,6 +322,11 @@
 	#define READWRITEFLAGS				O_RDWR
 
 	typedef	off_t						xoff_t;
+
+	#include <sys/endian.h>
+	#define bswap_16(x)					bswap16(x)
+	#define bswap_32(x)					bswap32(x)
+	#define bswap_64(x)					bswap64(x)
 #elif defined( __OpenBSD__ )
 	#define exiso_target				"openbsd"
 
@@ -329,6 +339,11 @@
 	#define READWRITEFLAGS				O_RDWR
 
 	typedef	off_t						xoff_t;
+
+	#include <sys/types.h>
+	#define bswap_16(x)					swap16(x)
+	#define bswap_32(x)					swap32(x)
+	#define bswap_64(x)					swap64(x)
 #elif defined( __LINUX__ )
 	#define exiso_target				"linux"
 
@@ -344,6 +359,8 @@
 	#define stat						stat64
 	
 	typedef off64_t 					xoff_t;
+
+	#include <byteswap.h>
 #elif defined( _WIN32 )
 	#define exiso_target				"win32"
 
@@ -367,24 +384,42 @@
 	#define stat						_stat64
 
     typedef int64_t                     xoff_t;
+
+	#include <stdlib.h>
+	#define bswap_16(x)					_byteswap_ushort(x)
+	#define bswap_32(x)					_byteswap_ulong(x)
+	#define bswap_64(x)					_byteswap_uint64(x)
 #else
 	#error unknown target, cannot compile!
 #endif
 
+#if !defined(BIG_ENDIAN)
+	#define BIG_ENDIAN		1
+	#define LITTLE_ENDIAN	0
+#endif
 
-#define inplace_swap16( n )				( (n) = ( ( ( (n) & 0xff ) << 8 ) | ( ( (n) & 0xff00 ) >> 8 ) ) )
-#define inplace_swap32( n )				( (n) = ( ( ( (n) & 0xff ) << 24) | ( ( (n) & 0xff00 ) << 8) | ( ( (n) & 0xff0000 ) >> 8 ) | ( ( (n) & 0xff000000 ) >> 24 ) ) )
+#if defined(ENDIANNESS)
+	#if ENDIANNESS == BIG_ENDIAN
+		#define USE_BIG_ENDIAN
+	#elif ENDIANNESS != LITTLE_ENDIAN
+		#error unknown endianness, cannot compile!
+	#endif
+#endif
 
-#ifdef USE_BIG_ENDIAN
-	#define big16( n )
-	#define big32( n )
-	#define little16( n )				inplace_swap16( n )
-	#define little32( n )				inplace_swap32( n )
+#if defined(USE_BIG_ENDIAN)
+	#define big16(n)
+	#define big32(n)
+	#define big64(n)
+	#define little16(n)					( (n) = bswap_16((n)) )
+	#define little32(n)					( (n) = bswap_32((n)) )
+	#define little64(n)					( (n) = bswap_64((n)) )
 #else
-	#define big16( n )					inplace_swap16( n )
-	#define big32( n )					inplace_swap32( n )
-	#define	little16( n )
-	#define little32( n )
+	#define big16(n)					( (n) = bswap_16((n)) )
+	#define big32(n)					( (n) = bswap_32((n)) )
+	#define big64(n)					( (n) = bswap_64((n)) )
+	#define	little16(n)
+	#define little32(n)
+	#define little64(n)
 #endif
 
 
@@ -398,6 +433,7 @@
 	enum { false, true };
 #endif
 
+typedef int64_t							file_time_t;
 
 #ifndef nil
 	#define nil							0
@@ -581,11 +617,6 @@ struct create_list {
 	create_list						   *next;
 };
 
-typedef struct FILE_TIME {
-	uint32_t							l;
-	uint32_t							h;
-} FILE_TIME;
-
 typedef struct wdsafp_context {
 	xoff_t								dir_start;
 	uint32_t							*current_sector;
@@ -622,7 +653,7 @@ int traverse_xiso(int in_xiso, xoff_t in_dir_start, uint16_t entry_offset, uint1
 int process_node(int in_xiso, dir_node* node, char* in_path, modes in_mode, dir_node_avl** in_root, strategies strategy);
 int create_xiso( char *in_root_directory, char *in_output_directory, dir_node_avl *in_root, int in_xiso, char **out_iso_path, char *in_name, progress_callback in_progress_callback );
 
-FILE_TIME *alloc_filetime_now( void );
+int get_filetime_now( file_time_t *ft );
 int generate_avl_tree_local( dir_node_avl **out_root, int *io_n );
 int generate_avl_tree_remote( dir_node_avl **out_root, int *io_n );
 int write_directory( dir_node_avl *in_avl, write_tree_context* in_context, int in_depth );
@@ -955,7 +986,7 @@ int verify_xiso( int in_xiso, int32_t *out_root_dir_sector, int32_t *out_root_di
 int create_xiso( char *in_root_directory, char *in_output_directory, dir_node_avl *in_root, int in_xiso, char **out_iso_path, char *in_name, progress_callback in_progress_callback ) {
 	xoff_t					pos = 0;
 	dir_node_avl			root = { 0 };
-	FILE_TIME			   *ft = nil;
+	file_time_t				ft = 0;
 	write_tree_context		wt_context = { 0 };
 	uint32_t				start_sector = 0;
 	int						i = 0, n = 0, xiso = -1, err = 0;
@@ -1059,8 +1090,8 @@ int create_xiso( char *in_root_directory, char *in_output_directory, dir_node_av
 
 			memset( buf, 0, XISO_FILETIME_SIZE );
 		} else {
-			if ( ( ft = alloc_filetime_now() ) == nil ) mem_err();
-			if ( ! err && write( xiso, ft, XISO_FILETIME_SIZE ) != XISO_FILETIME_SIZE ) write_err();
+			if ( ( err = get_filetime_now(&ft) ) ) misc_err("cannot get current time");
+			if ( ! err && write( xiso, &ft, XISO_FILETIME_SIZE ) != XISO_FILETIME_SIZE ) write_err();
 		}
 	}
 	if ( ! err && write( xiso, buf, XISO_UNUSED_SIZE ) != XISO_UNUSED_SIZE ) write_err();
@@ -1106,7 +1137,6 @@ int create_xiso( char *in_root_directory, char *in_output_directory, dir_node_av
 	
 	if ( root.filename ) free( root.filename );
 	if ( buf ) free( buf );
-	if ( ft ) free( ft );
 
 	if ( cwd ) {
 		if ( chdir( cwd ) == -1 ) chdir_err( cwd );
@@ -2025,26 +2055,18 @@ int generate_avl_tree_local( dir_node_avl **out_root, int *io_n ) {
 }
 
 
-FILE_TIME *alloc_filetime_now( void ) {
-	FILE_TIME		   *ft = nil;
+int get_filetime_now(file_time_t *ft) {
 	time_t				now = 0;
-	int64_t				converted;
 	int					err = 0;
 
-	if ( ( ft = (FILE_TIME *) malloc( sizeof(struct FILE_TIME) ) ) == nil ) mem_err();
-	if ( ! err && ( now = time( nil ) ) == -1 ) unknown_err();
+	if (ft == nil) return 1;
+	if ( ( now = time( nil ) ) == -1 ) unknown_err();
 	if ( ! err ) {
-		converted = (now * 10000000LL) + 116444736000000000LL;	// Magic numbers directly from Microsoft
-		ft->h = (uint32_t)((converted >> 32) & 0xffffffff);
-		ft->l = (uint32_t)(converted & 0xffffffff);
-		little32( ft->h );		// convert to little endian here because this is a PC only struct and we won't read it anyway
-		little32( ft->l );
-	} else if ( ft ) {
-		free( ft );
-		ft = nil;
+		*ft = (now * 10000000LL) + 116444736000000000LL;	// Magic numbers directly from Microsoft
+		little64(*ft);	// convert to little endian here because this is a PC only struct and we won't read it anyway
 	}
 	
-	return ft;
+	return err;
 }
 
 // Found the CD-ROM layout in ECMA-119.  Now burning software should correctly
