@@ -235,7 +235,9 @@
 */
 
 #if defined( __LINUX__ )
-	#define _LARGEFILE64_SOURCE
+	#define _LARGEFILE_SOURCE
+	#define	_FILE_OFFSET_BITS	64
+	#define	_TIME_BITS			64
 #endif
 
 #if defined( __GNUC__ )
@@ -291,96 +293,52 @@
 	#include <strings.h>
 #endif
 
-
-#if defined( __DARWIN__ )
-	#define exiso_target				"macos-x"
-
-	#define PATH_CHAR					'/'
-	#define PATH_CHAR_STR				"/"
-
-	#define FORCE_ASCII					1
-	#define READFLAGS					O_RDONLY
-	#define WRITEFLAGS					O_WRONLY | O_CREAT | O_TRUNC
-	#define READWRITEFLAGS				O_RDWR
-
-	typedef	off_t						xoff_t;
+#if defined(__DARWIN__)
+	#define exiso_target				"macOS"
 
 	#include <libkern/OSByteOrder.h>
 	#define bswap_16(x)					OSSwapInt16(x)
 	#define bswap_32(x)					OSSwapInt32(x)
 	#define bswap_64(x)					OSSwapInt64(x)
-#elif defined( __FreeBSD__ )
-	#define exiso_target				"freebsd"
-
-	#define PATH_CHAR					'/'
-	#define PATH_CHAR_STR				"/"
-
-	#define FORCE_ASCII					1
-	#define READFLAGS					O_RDONLY
-	#define WRITEFLAGS					O_WRONLY | O_CREAT | O_TRUNC
-	#define READWRITEFLAGS				O_RDWR
-
-	typedef	off_t						xoff_t;
+#elif defined(__FreeBSD__)
+	#define exiso_target				"FreeBSD"
 
 	#include <sys/endian.h>
 	#define bswap_16(x)					bswap16(x)
 	#define bswap_32(x)					bswap32(x)
 	#define bswap_64(x)					bswap64(x)
-#elif defined( __OpenBSD__ )
-	#define exiso_target				"openbsd"
-
-	#define PATH_CHAR					'/'
-	#define PATH_CHAR_STR				"/"
-
-	#define FORCE_ASCII					1
-	#define READFLAGS					O_RDONLY
-	#define WRITEFLAGS					O_WRONLY | O_CREAT | O_TRUNC
-	#define READWRITEFLAGS				O_RDWR
-
-	typedef	off_t						xoff_t;
+#elif defined(__OpenBSD__)
+	#define exiso_target				"OpenBSD"
 
 	#include <sys/types.h>
 	#define bswap_16(x)					swap16(x)
 	#define bswap_32(x)					swap32(x)
 	#define bswap_64(x)					swap64(x)
-#elif defined( __LINUX__ )
-	#define exiso_target				"linux"
+#elif defined(__NetBSD__)
+	#define exiso_target				"NetBSD"
 
-	#define PATH_CHAR					'/'
-	#define PATH_CHAR_STR				"/"
-
-	#define FORCE_ASCII					0
-	#define READFLAGS					O_RDONLY | O_LARGEFILE
-	#define WRITEFLAGS					O_WRONLY | O_CREAT | O_TRUNC | O_LARGEFILE
-	#define READWRITEFLAGS				O_RDWR | O_LARGEFILE
-
-	#define lseek						lseek64
-	#define stat						stat64
-	
-	typedef off64_t 					xoff_t;
+	#include <sys/types.h>
+	#include <machine/bswap.h>
+	#if defined(__BSWAP_RENAME) && !defined(__bswap_16)
+		#define bswap_16(x)				bswap16(x)
+		#define bswap_32(x)				bswap32(x)
+		#define bswap_64(x)				bswap64(x)
+	#endif
+#elif defined(__LINUX__)
+	#define exiso_target				"Linux"
 
 	#include <byteswap.h>
-#elif defined( _WIN32 ) || defined(__CYGWIN__)
-	#define exiso_target				"win32"
-
-	#define PATH_CHAR					'\\'
-	#define PATH_CHAR_STR				"\\"
-
-	#define FORCE_ASCII					0
-	#define READFLAGS					O_RDONLY | O_BINARY
-	#define WRITEFLAGS					O_WRONLY | O_CREAT | O_TRUNC | O_BINARY
-	#define READWRITEFLAGS				O_RDWR   | O_BINARY
+#elif defined(_WIN32) || defined(__CYGWIN__)
+	#define exiso_target				"Windows"
 
 	#if defined(_MSC_VER)
-		#define S_ISDIR( x )			( ( x ) & _S_IFDIR )
-		#define S_ISREG( x )			( ( x ) & _S_IFREG )
+		#define S_ISDIR(x)				((x) & _S_IFDIR)
+		#define S_ISREG(x)				((x) & _S_IFREG)
 
 		typedef SSIZE_T					ssize_t;
 		#define strcasecmp				_stricmp
 		#define strncasecmp				_strnicmp
 	#endif
-
-	typedef int64_t                     xoff_t;
 
 	#if defined(__CYGWIN__)
 		#include <byteswap.h>
@@ -398,6 +356,32 @@
 	#endif
 #else
 	#error unknown target, cannot compile!
+#endif
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+	#define PATH_CHAR					'\\'
+	#define PATH_CHAR_STR				"\\"
+
+	#define READFLAGS					O_RDONLY | O_BINARY
+	#define WRITEFLAGS					O_WRONLY | O_CREAT | O_TRUNC | O_BINARY
+	#define READWRITEFLAGS				O_RDWR   | O_BINARY
+
+	typedef int64_t                     xoff_t;
+#else
+	#define PATH_CHAR					'/'
+	#define PATH_CHAR_STR				"/"
+
+	#define READFLAGS					O_RDONLY
+	#define WRITEFLAGS					O_WRONLY | O_CREAT | O_TRUNC
+	#define READWRITEFLAGS				O_RDWR
+
+	typedef	off_t						xoff_t;
+#endif
+
+#if defined(__DARWIN__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)	/* All BSD systems, but this macro is unused anyways */
+	#define FORCE_ASCII					1
+#else
+	#define FORCE_ASCII					0
 #endif
 
 #if CHAR_BIT != 8
