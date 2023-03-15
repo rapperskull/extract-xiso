@@ -360,7 +360,7 @@
 	typedef off64_t 					xoff_t;
 
 	#include <byteswap.h>
-#elif defined( _WIN32 )
+#elif defined( _WIN32 ) || defined(__CYGWIN__)
 	#define exiso_target				"win32"
 
 	#define PATH_CHAR					'\\'
@@ -370,7 +370,7 @@
 	#define READFLAGS					O_RDONLY | O_BINARY
 	#define WRITEFLAGS					O_WRONLY | O_CREAT | O_TRUNC | O_BINARY
 	#define READWRITEFLAGS				O_RDWR   | O_BINARY
-	
+
 	#if defined(_MSC_VER)
 		#define S_ISDIR( x )			( ( x ) & _S_IFDIR )
 		#define S_ISREG( x )			( ( x ) & _S_IFREG )
@@ -380,30 +380,40 @@
 		#define strncasecmp				_strnicmp
 	#endif
 
-	#define lseek						_lseeki64
-	#define mkdir( a, b )				_mkdir( (a) )
-	#define stat						_stat64
-	#define realpath(a, b)				_fullpath(b, a, _MAX_PATH)
+	typedef int64_t                     xoff_t;
 
-    typedef int64_t                     xoff_t;
+	#if defined(__CYGWIN__)
+		#include <byteswap.h>
+	#else
+		#include <stdlib.h>
 
-	#include <stdlib.h>
-	#define bswap_16(x)					_byteswap_ushort(x)
-	#define bswap_32(x)					_byteswap_ulong(x)
-	#define bswap_64(x)					_byteswap_uint64(x)
+		#define lseek					_lseeki64
+		#define mkdir(a, b)				_mkdir(a)
+		#define stat					_stat64
+		#define realpath(a, b)			_fullpath(b, a, _MAX_PATH)
+
+		#define bswap_16(x)				_byteswap_ushort(x)
+		#define bswap_32(x)				_byteswap_ulong(x)
+		#define bswap_64(x)				_byteswap_uint64(x)
+	#endif
 #else
 	#error unknown target, cannot compile!
+#endif
+
+#if CHAR_BIT != 8
+	#error unsupported char size, cannot compile!
 #endif
 
 #if !defined(BIG_ENDIAN)
 	#define BIG_ENDIAN		1
 	#define LITTLE_ENDIAN	0
 #endif
+#define UNK_ENDIAN			-1
 
-#if defined(ENDIANNESS)
-	#if ENDIANNESS == BIG_ENDIAN
+#if defined(CMAKE_ENDIANNESS)
+	#if CMAKE_ENDIANNESS == BIG_ENDIAN
 		#define USE_BIG_ENDIAN
-	#elif ENDIANNESS != LITTLE_ENDIAN
+	#elif CMAKE_ENDIANNESS != LITTLE_ENDIAN
 		#error unknown endianness, cannot compile!
 	#endif
 #endif

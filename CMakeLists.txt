@@ -7,7 +7,7 @@ set(SOURCE_FILES
 	extract-xiso.c
 )
 
-if (MSVC)
+if(MSVC)
     add_compile_options(/W4)
     add_definitions(-D_CRT_NONSTDC_NO_WARNINGS) # POSIX function names
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)  # Unsafe CRT Library functions
@@ -19,7 +19,10 @@ else()
 endif()
 add_executable(extract-xiso ${SOURCE_FILES})
 target_compile_definitions(extract-xiso PRIVATE ${TARGET_OS})
-target_compile_definitions(extract-xiso PRIVATE ENDIANNESS=${CMAKE_C_BYTE_ORDER})
+if(CMAKE_C_BYTE_ORDER MATCHES "^$")
+    set(CMAKE_C_BYTE_ORDER UNK_ENDIAN)
+endif()
+target_compile_definitions(extract-xiso PRIVATE CMAKE_ENDIANNESS=${CMAKE_C_BYTE_ORDER})
 set_property(TARGET extract-xiso PROPERTY C_STANDARD 99)
 set_property(TARGET extract-xiso PROPERTY C_EXTENSIONS OFF)
 install(TARGETS extract-xiso RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
