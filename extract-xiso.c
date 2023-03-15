@@ -277,6 +277,7 @@
 #if defined( _WIN32 )
 	#include <direct.h>
 	#include "win32/dirent.c"
+	#include "win32/getopt.c"
 #else
 	#include <dirent.h>
 	#include <limits.h>
@@ -284,10 +285,8 @@
 #endif
 
 #if defined(_MSC_VER)
+	#include "win32/asprintf.c"
 	#include <BaseTsd.h>
-	typedef SSIZE_T		ssize_t;
-	#define strcasecmp	_stricmp
-	#define strncasecmp	_strnicmp
 #else
 	#include <strings.h>
 #endif
@@ -371,14 +370,16 @@
 	#define READFLAGS					O_RDONLY | O_BINARY
 	#define WRITEFLAGS					O_WRONLY | O_CREAT | O_TRUNC | O_BINARY
 	#define READWRITEFLAGS				O_RDWR   | O_BINARY
+	
+	#if defined(_MSC_VER)
+		#define S_ISDIR( x )			( ( x ) & _S_IFDIR )
+		#define S_ISREG( x )			( ( x ) & _S_IFREG )
 
-	#define S_ISDIR( x )				( ( x ) & _S_IFDIR )
-	#define S_ISREG( x )				( ( x ) & _S_IFREG )
+		typedef SSIZE_T					ssize_t;
+		#define strcasecmp				_stricmp
+		#define strncasecmp				_strnicmp
+	#endif
 
-	#include "win32/getopt.c"
-#if defined(_MSC_VER)
-	#include "win32/asprintf.c"
-#endif
 	#define lseek						_lseeki64
 	#define mkdir( a, b )				_mkdir( (a) )
 	#define stat						_stat64
