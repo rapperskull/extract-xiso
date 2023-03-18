@@ -269,6 +269,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <inttypes.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -2110,7 +2111,7 @@ void write_sector( int in_xiso, xoff_t in_start, char *in_name, char *in_extensi
 	if ( ( cwd = getcwd( nil, 0 ) ) == nil ) mem_err();
 	if ( ! err && chdir( DEBUG_DUMP_DIRECTORY ) == -1 ) chdir_err( DEBUG_DUMP_DIRECTORY );
 
-	sprintf( buf, "%llu.%s.%s", in_start, in_name, in_extension ? in_extension : "" );
+	sprintf( buf, "%" PRId64 ".%s.%s", in_start, in_name, in_extension ? in_extension : "");
 
 	if ( ! err && ( fp = open( buf, WRITEFLAGS, 0644 ) ) == -1 ) open_err( buf );
 	if ( ! err && ( curpos = lseek_with_error( in_xiso, 0, SEEK_CUR ) ) == -1 ) seek_err();
