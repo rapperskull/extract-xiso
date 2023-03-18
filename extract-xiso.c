@@ -1216,7 +1216,7 @@ int decode_xiso( char *in_xiso, char *in_path, modes in_mode, char **out_iso_pat
 				if (!err) err = create_xiso(iso_name, in_path, root, xiso, out_iso_path, nil, nil);
 			}
 			else {
-				if (!err) err = traverse_xiso(xiso, root_dir_start, 0, root_end_offset, buf, in_mode, nil, discover_strategy);
+				if (!err && root_dir_size != 0) err = traverse_xiso(xiso, root_dir_start, 0, root_end_offset, buf, in_mode, nil, discover_strategy);
 			}
 			
 			if(buf) free(buf);
@@ -1370,7 +1370,9 @@ int process_node(int in_xiso, dir_node* node, char* in_path, modes in_mode, dir_
 
 		if (!err) {
 			// Recurse on subdirectory
-			if (node->file_size == 0) *in_root = EMPTY_SUBDIRECTORY;
+			if (node->file_size == 0) {
+				if (in_mode == k_generate_avl) *in_root = EMPTY_SUBDIRECTORY;
+			}
 			else {
 				if (in_path && asprintf(&path, "%s%s%c", in_path, node->filename, PATH_CHAR) == -1) mem_err();
 				if (!err) {
