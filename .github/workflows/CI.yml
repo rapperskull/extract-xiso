@@ -23,7 +23,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: tag
-        path: .
+        path: tag
 
   build-windows:
     runs-on: windows-latest
@@ -203,9 +203,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-windows, build-linux, build-macos, build-freebsd, build-openbsd, build-netbsd]
     steps:
-    - name: Download artifacts
+    - name: Download tag artifact
       uses: actions/download-artifact@v3
       with:
+        name: tag
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: artifacts
         path: dist
     - name: Create archives
       run: |
@@ -219,7 +224,7 @@ jobs:
         done
     - name: Get package info
       run: |
-        echo "BUILD_TAG=$(cat dist/tag)" >> $GITHUB_ENV
+        echo "BUILD_TAG=$(cat tag)" >> $GITHUB_ENV
     - name: Create release
       id: create_release
       uses: softprops/action-gh-release@v1
