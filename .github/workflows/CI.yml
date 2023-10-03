@@ -23,6 +23,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: tag
+        path: .
 
   build-windows:
     runs-on: windows-latest
