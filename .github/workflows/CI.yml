@@ -23,7 +23,6 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: tag
-        path: tag
 
   build-windows:
     runs-on: windows-latest
@@ -212,12 +211,14 @@ jobs:
         for dir in dist/*/
         do
           pushd ${dir}
-          zip -r ../$(basename ${dir} | tr '[:upper:]' '[:lower:]').zip *
+          zip_file = "../$(basename ${dir} | tr '[:upper:]' '[:lower:]').zip"
+          echo "Create ${zip_file}"
+          zip -r ${zip_file} *
           popd
         done
     - name: Get package info
       run: |
-        echo "BUILD_TAG=$(cat dist/tag/tag)" >> $GITHUB_ENV
+        echo "BUILD_TAG=$(cat dist/tag)" >> $GITHUB_ENV
     - name: Create release
       id: create_release
       uses: softprops/action-gh-release@v1
