@@ -203,18 +203,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-windows, build-linux, build-macos, build-freebsd, build-openbsd, build-netbsd]
     steps:
-    - name: Download tag artifact
+    - name: Download artifacts
       uses: actions/download-artifact@v3
       with:
-        name: tag
-    - name: Download build artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: artifacts
         path: dist
     - name: Create archives
       run: |
-        for dir in dist/*/
+        for dir in dist/extract-xiso-*/
         do
           pushd ${dir}
           zip_file="../$(basename ${dir} | tr '[:upper:]' '[:lower:]').zip"
@@ -224,7 +219,7 @@ jobs:
         done
     - name: Get package info
       run: |
-        echo "BUILD_TAG=$(cat tag)" >> $GITHUB_ENV
+        echo "BUILD_TAG=$(cat dist/tag/tag)" >> $GITHUB_ENV
     - name: Create release
       id: create_release
       uses: softprops/action-gh-release@v1
