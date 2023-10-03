@@ -78,7 +78,7 @@ jobs:
         mv -v build/extract-xiso LICENSE.TXT artifacts
     - uses: actions/upload-artifact@v3
       with:
-        name: extract-xiso_${{ runner.os }}
+        name: extract-xiso_linux
         path: artifacts
 
   build-macos:
@@ -99,7 +99,7 @@ jobs:
         mv -v build/extract-xiso LICENSE.TXT artifacts
     - uses: actions/upload-artifact@v3
       with:
-        name: extract-xiso_${{ runner.os }}
+        name: extract-xiso_macos
         path: artifacts
 
   build-freebsd:
@@ -224,7 +224,7 @@ jobs:
         pushd dist/extract-xiso_linux
         zip -r ../extract-xiso-linux.zip *
         popd
-        pushd dist/extract-xiso_macOS
+        pushd dist/extract-xiso_macos
         zip -r ../extract-xiso-macos.zip *
         popd
         pushd dist/extract-xiso_freebsd
