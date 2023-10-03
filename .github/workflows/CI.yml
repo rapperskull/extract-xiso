@@ -43,7 +43,7 @@ jobs:
             platform: x64
             artifact_os: Win64
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: CMake generate
       run: |
         mkdir build && cd build
@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: Init
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: CMake generate
       run: |
         mkdir build && cd build
@@ -85,7 +85,7 @@ jobs:
     runs-on: macos-latest
     needs: Init
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: CMake generate
       run: |
         mkdir build && cd build
@@ -108,7 +108,7 @@ jobs:
     env:
         SYSROOT_PATH: /opt/cross-freebsd-13
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: FreeBSD toolchain setup
       run: |
         sudo apt-get -qq install clang lld && cd /tmp && \
@@ -140,7 +140,7 @@ jobs:
     env:
         SYSROOT_PATH: /opt/cross-openbsd-7
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: OpenBSD toolchain setup
       run: |
         sudo apt-get -qq install clang lld && cd /tmp && \
@@ -172,7 +172,7 @@ jobs:
     env:
         SYSROOT_PATH: /opt/cross-netbsd-9
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: NetBSD toolchain setup
       run: |
         sudo apt-get -qq install clang lld && cd /tmp && \
@@ -199,11 +199,9 @@ jobs:
         path: artifacts
 
   Release:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     needs: [build-windows, build-linux, build-macos, build-freebsd, build-openbsd, build-netbsd]
-    env:
-      BUILD_TAG:
     steps:
     - name: Download artifacts
       uses: actions/download-artifact@v3
@@ -243,101 +241,12 @@ jobs:
         echo "BUILD_TAG=$(cat dist/tag/tag)" >> $GITHUB_ENV
     - name: Create release
       id: create_release
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ env.BUILD_TAG }}
-        release_name: ${{ env.BUILD_TAG }}
         draft: false
         prerelease: false
-    - name: Upload release assets (Win32 build)
-      id: upload-release-assets-win32-release
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_name: extract-xiso-win32-release.zip
-        asset_path: dist/extract-xiso-win32-release.zip
-        asset_content_type: application/zip
-    - name: Upload release assets (Win32 debug build)
-      id: upload-release-assets-win32-debug
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_name: extract-xiso-win32-debug.zip
-        asset_path: dist/extract-xiso-win32-debug.zip
-        asset_content_type: application/zip
-    - name: Upload release assets (Win64 build)
-      id: upload-release-assets-win64-release
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_name: extract-xiso-win64-release.zip
-        asset_path: dist/extract-xiso-win64-release.zip
-        asset_content_type: application/zip
-    - name: Upload release assets (Win64 debug build)
-      id: upload-release-assets-win64-debug
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_name: extract-xiso-win64-debug.zip
-        asset_path: dist/extract-xiso-win64-debug.zip
-        asset_content_type: application/zip
-    - name: Upload release assets (Linux build)
-      id: upload-release-assets-linux-release
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_name: extract-xiso-linux.zip
-        asset_path: dist/extract-xiso-linux.zip
-        asset_content_type: application/zip
-    - name: Upload release assets (macOS build)
-      id: upload-release-assets-macos-release
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_name: extract-xiso-macos.zip
-        asset_path: dist/extract-xiso-macos.zip
-        asset_content_type: application/zip
-    - name: Upload release assets (FreeBSD build)
-      id: upload-release-assets-freebsd-release
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_name: extract-xiso-freebsd.zip
-        asset_path: dist/extract-xiso-freebsd.zip
-        asset_content_type: application/zip
-    - name: Upload release assets (OpenBSD build)
-      id: upload-release-assets-openbsd-release
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_name: extract-xiso-openbsd.zip
-        asset_path: dist/extract-xiso-openbsd.zip
-        asset_content_type: application/zip
-    - name: Upload release assets (NetBSD build)
-      id: upload-release-assets-netbsd-release
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_name: extract-xiso-netbsd.zip
-        asset_path: dist/extract-xiso-netbsd.zip
-        asset_content_type: application/zip
+        fail_on_unmatched_files: true
+        files: dist/*.zip
